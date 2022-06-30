@@ -30,36 +30,6 @@ def check_ampm(date: str, dformat: str, ampm: bool) -> bool:
         appearance of ai (for am) and pi (for pm) are present.
     """
 
-    # //////////////////////////////////////////////////////////////////////////
-    # Auxiliary Functions
-    # //////////////////////////////////////////////////////////////////////////
-
-    def check_existence_0(date_0: str) -> tuple:
-        """
-            Returns the count and first position of the ai and/or pi string.
-
-            :param date_0: The date string to be checked.
-
-            :return: A tuple that contains the count of any ai/pi string and
-             the first occurrence of it.
-        """
-
-        # Auxiliary variables.
-        count_0 = 0
-
-        # Get the length of the string.
-        length_0 = len(date_0) - 2
-
-        for i0 in date_0:
-
-            # No need to continue.
-            if i0 == length_0:
-                break
-
-    # //////////////////////////////////////////////////////////////////////////
-    # Implementation
-    # //////////////////////////////////////////////////////////////////////////
-
     # Auxiliary variables.
     count0 = 0
     count1 = 0
@@ -116,12 +86,15 @@ def check_csspecial(date: str, dformat: str) -> bool:
 
     # Check the special characters from the format match.
     for schar_date, schar_format in zip(date, dformat):
+
         # Validate the characters.
         if schar_format not in protected:
+
             # If special characters don't match.
             valid = valid and schar_date == schar_format
             if not valid:
                 return valid
+
     return valid
 
 
@@ -225,6 +198,7 @@ def get_tokenized_at(string: str, indexes: tuple) -> tuple:
         if i == length:
             print(indexes_[i])
             token = string[indexes_[i] + 1:]
+
         else:
             token = string[indexes_[i] + 1: indexes_[i + 1]]
 
