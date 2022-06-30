@@ -292,11 +292,14 @@ def validate_date(date: str, dformat: str, ampm: bool = False) -> bool:
 
 def main() -> None:
 
-    date =       "2ai,,202-12-29-20::30*:59,"
-    dformat =    "Mai,,YYY-MM-DD-hh::mm*:ss,"
+    # Date and format.
+    date = "2ai,,202-12-29-20::30*:59,"
+    dformat = "Mai,,YYY-MM-DD-hh::mm*:ss,"
 
-
+    # Validate the date.
     validate_date(date, dformat=dformat, ampm=True)
+
+    # TODO: Get the dictionaries of the date format and match.
 
 # ##############################################################################
 # Main Program
