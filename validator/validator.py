@@ -11,6 +11,7 @@
 # ------------------------------------------------------------------------------
 # Check Functions.
 # ------------------------------------------------------------------------------
+import copy
 
 
 def check_ampm(date: str, dformat: str, ampm: bool) -> bool:
@@ -28,6 +29,36 @@ def check_ampm(date: str, dformat: str, ampm: bool) -> bool:
         :return: True, if the string is NOT given in 24-hour mode or if a single
         appearance of ai (for am) and pi (for pm) are present.
     """
+
+    # //////////////////////////////////////////////////////////////////////////
+    # Auxiliary Functions
+    # //////////////////////////////////////////////////////////////////////////
+
+    def check_existence_0(date_0: str) -> tuple:
+        """
+            Returns the count and first position of the ai and/or pi string.
+
+            :param date_0: The date string to be checked.
+
+            :return: A tuple that contains the count of any ai/pi string and
+             the first occurrence of it.
+        """
+
+        # Auxiliary variables.
+        count_0 = 0
+
+        # Get the length of the string.
+        length_0 = len(date_0) - 2
+
+        for i0 in date_0:
+
+            # No need to continue.
+            if i0 == length_0:
+                break
+
+    # //////////////////////////////////////////////////////////////////////////
+    # Implementation
+    # //////////////////////////////////////////////////////////////////////////
 
     # Auxiliary variables.
     count0 = 0
@@ -91,7 +122,6 @@ def check_csspecial(date: str, dformat: str) -> bool:
             valid = valid and schar_date == schar_format
             if not valid:
                 return valid
-
     return valid
 
 
@@ -122,6 +152,86 @@ def get_protected() -> tuple:
         :return: The tuple with the protected characters.
     """
     return "Y", "M", "D", "h", "m", "s", "t"
+
+
+def get_tokenized(string: str) -> tuple:
+    """
+        Tokenizes the given string at the special characters, i.e., the
+        non-protected characters.
+
+        :param string:
+
+        :return: The list of generated, non-empty strings that are generated
+         when breaking the string at the tokens.
+    """
+
+    # Auxiliary variables.
+    indexes = []
+    pchars = get_protected()
+    string_ = ""
+    tokens = []
+
+    # Check character by character.
+    for i, character in enumerate(string):
+
+        # Add the string to the tokens.
+        if character not in pchars:
+            # Save the index where the characters are located.
+            indexes.append(i)
+
+            # Don't append empty strings.
+            if string_ == "":
+                continue
+
+            # Append the token.
+            tokens.append(copy.deepcopy(string_))
+            string_ = ""
+            continue
+
+        # Kep adding characters.
+        string_ += character
+
+    # Append the final string.
+    tokens.append(string_) if not string_ == "" else None
+
+    return tuple(tokens), indexes
+
+
+def get_tokenized_at(string: str, indexes: tuple) -> tuple:
+    """
+        Tokenizes the given string at the given locations, i.e., the
+        indexes that are stored in the one-dimensional tuple 'indexes'.
+
+        :param string: The string to be tokenized.
+
+        :param indexes: The places where the string is to be split.
+
+        :return: The list of generated, non-empty strings that are generated
+         when breaking the string at the tokens.
+    """
+
+    # Auxiliary variables.
+    indexes_ = list(indexes)
+    tokens = []
+
+    # If zero is not in the indexes.
+    if not indexes_[0] == 0:
+        indexes_.insert(0, -1)
+    length = len(indexes_) - 1
+
+    # Get the tokens.
+    for i, _ in enumerate(indexes_):
+        # Get the tokens.
+        if i == length:
+            print(indexes_[i])
+            token = string[indexes_[i] + 1:]
+        else:
+            token = string[indexes_[i] + 1: indexes_[i + 1]]
+
+        # Append the final string.
+        tokens.append(copy.deepcopy(token)) if not token == "" else None
+
+    return tuple(tokens)
 
 
 # ------------------------------------------------------------------------------
@@ -188,20 +298,17 @@ def validate_date(date: str, dformat: str, ampm: bool = False) -> bool:
     if not valid:
         return valid
 
-    # If in 12-hour format.
-    if ampm:
-        # Remove the ai or pi strings.
-        date = remove_ampm(date)
-        dformat = remove_ampm(dformat)
-
     # Check special character placement.
-    valid = check_csspecial(date, dformat)
+    valid = check_csspecial(date, dformat=dformat)
     if not valid:
         return valid
 
-    print(date)
-    print(dformat)
-    print("Here!")
+    # Get the specific format.
+    dformat_tokens, indexes = get_tokenized(dformat)
+    date_tokens = get_tokenized_at(date, indexes)
+
+    print(date_tokens)
+    print(dformat_tokens)
 
 
 # ##############################################################################
@@ -211,8 +318,9 @@ def validate_date(date: str, dformat: str, ampm: bool = False) -> bool:
 
 def main() -> None:
 
-    date =    "2pkai2;;11;30:20:32*18,9"
-    dformat = "YYYaiY;;MM;DD:hh:mm*ss,t"
+    date =       "2ai,,202-12-29-20::30*:59,"
+    dformat =    "Mai,,YYY-MM-DD-hh::mm*:ss,"
+
 
     validate_date(date, dformat=dformat, ampm=True)
 
