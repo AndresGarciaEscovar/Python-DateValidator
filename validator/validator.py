@@ -113,6 +113,39 @@ def check_length(date: str, dformat: str) -> bool:
     return len(date) == len(dformat)
 
 
+def check_not_repeated(pairs: list) -> bool:
+    """
+        Checks that the requested quantities are not repeated, i.e., that there
+        is a single request for a year, a month, a day, an hour, a minute, a
+        second and a decimal of a second, at most.
+
+        :param pairs: The tuple of pairs that represent the dictionary entries
+         to be checked.
+
+        :return: True, if there are no repeated entries. False, otherwise.
+    """
+
+    # Auxiliary variables.
+    valid = True
+    length = len(pairs) - 1
+
+    # Examine each pair.
+    for i, pair0 in enumerate(pairs):
+        # No need to compare the last element.
+        if i == length:
+            break
+
+        # Loop over the shorter list.
+        for j, pair1 in enumerate(pairs[i + 1:]):
+
+            # Identical characters in different places -> repeated quantities.
+            valid = valid and not pair0[0][0] == pair1[0][0]
+            if not valid:
+                return valid
+
+    return valid
+
+
 # ------------------------------------------------------------------------------
 # Get Functions.
 # ------------------------------------------------------------------------------
@@ -183,6 +216,10 @@ def get_tokenized_at(string: str, indexes: tuple) -> tuple:
          when breaking the string at the tokens.
     """
 
+    # Some times the string is not tokenized.
+    if len(indexes) == 0:
+        return (string,)
+
     # Auxiliary variables.
     indexes_ = list(indexes)
     tokens = []
@@ -208,9 +245,60 @@ def get_tokenized_at(string: str, indexes: tuple) -> tuple:
     return tuple(tokens)
 
 
+def get_tokenized_final(sdate: str, sdformat: str) -> list:
+    """
+        Tokenizes the final string to be placed into the dictionary. This gets
+        the specific fields to be verified, i.e., only characters in the
+        protected characters should be in the format string.
+
+        :param sdate: The characters in the segment of date to be validated.
+
+        :param sdformat: The characters in the format string to be validated.
+
+        :return: The list of lists of the consecutive protected characters.
+    """
+
+    # Get the first character.
+    cchar = sdformat[0]
+    date_list = []
+    dformat_list = []
+
+    # Get the strings to place the further tokenized strings.
+    string0 = ""
+    string1 = ""
+
+    # Separate the characters.
+    for i, (datechar, dformatchar) in enumerate(zip(sdate, sdformat)):
+        # Format doesn't match.
+        if not cchar == dformatchar:
+            # Strings match.
+            date_list.append(copy.deepcopy(string0))
+            dformat_list.append(copy.deepcopy(string1))
+
+            # New string is started.
+            string0 = ""
+            string1 = ""
+
+            # Update the character.
+            cchar = dformatchar
+
+        # Attach the strings.
+        string0 += datechar
+        string1 += dformatchar
+
+        # Append the last bit.
+        if i == len(sdate) - 1:
+            # Last piece of string.
+            date_list.append(string0)
+            dformat_list.append(string1)
+
+    return [(f, d) for d, f in zip(date_list, dformat_list)]
+
+
 # ------------------------------------------------------------------------------
 # Remove Functions.
 # ------------------------------------------------------------------------------
+
 
 def remove_ampm(string: str) -> str:
     """
@@ -235,6 +323,7 @@ def remove_ampm(string: str) -> str:
     string = string[:marker] + string[marker+2:]
 
     return string
+
 
 # ------------------------------------------------------------------------------
 # Validate Functions.
@@ -281,8 +370,15 @@ def validate_date(date: str, dformat: str, ampm: bool = False) -> bool:
     dformat_tokens, indexes = get_tokenized(dformat)
     date_tokens = get_tokenized_at(date, indexes)
 
-    print(date_tokens)
-    print(dformat_tokens)
+    # Get the pairs.
+    pairs = []
+    for datet, dformatt in zip(date_tokens, dformat_tokens):
+        pairs.extend(get_tokenized_final(datet, dformatt))
+
+    # Entries for the date must not repeated, i.e., entries are unique.
+    valid = check_not_repeated(pairs)
+    if not valid:
+        return valid
 
 
 # ##############################################################################
@@ -293,11 +389,11 @@ def validate_date(date: str, dformat: str, ampm: bool = False) -> bool:
 def main() -> None:
 
     # Date and format.
-    date = "2ai,,202-12-29-20::30*:59,"
-    dformat = "Mai,,YYY-MM-DD-hh::mm*:ss,"
+    date = "22032122920305"
+    dformat = "YYYYMMDDhhmmss"
 
     # Validate the date.
-    validate_date(date, dformat=dformat, ampm=True)
+    validate_date(date, dformat=dformat, ampm=False)
 
     # TODO: Get the dictionaries of the date format and match.
 
