@@ -45,3 +45,18 @@ class DateFormatError(Exception):
     # Private Interface
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+    # --------------------------------------------------------------------------
+    # Customize Methods
+    # --------------------------------------------------------------------------
+
+    def _customize(self, dformat: str):
+        """
+            Finishes customizing the message to indicate the error with the
+            date format.
+
+            :param dformat: The invalid date format.
+
+            :return: The customized message.
+        """
+        # TODO: Finish writing this method.
+        return ""
