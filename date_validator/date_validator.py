@@ -10,7 +10,7 @@ import copy
 import re
 
 # User defined.
-from errors.errors_date import DateAmPmError, DateFormatError
+from errors.errors_date import DateFormatError
 
 # ##############################################################################
 # Classes
