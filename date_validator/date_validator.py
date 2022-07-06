@@ -6,7 +6,6 @@
 
 
 # General.
-import copy
 import re
 
 # User defined.
