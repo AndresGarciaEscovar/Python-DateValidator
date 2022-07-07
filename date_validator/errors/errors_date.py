@@ -88,6 +88,18 @@ class DateFormatError(Exception):
             f"a single month, a single day, etc., field.\n"
             f"\t4. If the 12-hr format is requested, an hour must be provided."
             f"\n"
+            f"\t5. The current supported formats for the different fields are:"
+            f"\n"
+            "\t\t- Year - YYYY: Four digit year, e.g., 2002; YY: Two digit "
+            "year, e.g., 20.\n"
+            "\t\t- Month - MMM: Three first letters of the month, e.g., DEC; "
+            "MM: Two digit numerical month, e.g., 03.\n"
+            "\t\t- Day - DDD: Three digit day of year, e.g., 005; "
+            "DD: Two digit day of the month, e.g., 09.\n"
+            "\t\t- Hour - hh: Two digit hour of day, e.g., 23.\n"
+            "\t\t- Minute - mm: Two digit minutes of an hour, e.g., 07.\n"
+            "\t\t- Seconds - ss: Two digit seconds of a minute, e.g., 00.\n"
+            "\t\t- Tenth of Seconds - t: Single digit tenth of a second, e.g., 5.\n"
             f"Current requested format: {dformat}\n"
         )
 

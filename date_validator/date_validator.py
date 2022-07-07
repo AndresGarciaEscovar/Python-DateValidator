@@ -6,6 +6,7 @@
 
 
 # General.
+import copy
 import re
 
 # User defined.
@@ -138,6 +139,11 @@ class DateValidator:
         self.dformat = dformat
         self.date = date
 
+        # Initialize the validation dictionary.
+        self.quantites = dict((var, None) for var in DateValidator._FORMATS)
+        print(self.quantites)
+
+
     # ##########################################################################
     # Methods
     # ##########################################################################
@@ -160,57 +166,101 @@ class DateValidator:
         # Auxiliary Functions
         # //////////////////////////////////////////////////////////////////////
 
-        def get_separators_date0() -> tuple:
+        def find_ampm_index_0(tokens_0: tuple) -> int:
             """
-                Tokenize the date using the given tokens.
+                Finds the location of the token that contains the am/pm string
+                in the tuples.
 
-                :return: A tuple with the date fields, denoted by the separators
-                 in the date format.
+                :param tokens_0: The tuple with the date format tokens.
+
+                :return: The index of the tuple that contains the am/pm string.
+            """
+
+            # A string must, at least contain the ii token.
+            for i_0, strings_0 in enumerate(tokens_0):
+                if 'ii' in strings_0:
+                    return i_0
+
+            return -1
+
+        def remove_ampm_date_0(token_0: str, index_0: int) -> str:
+            """
+                Removes the am/pm/m string.
+
+                :param token_0: The string from which the date will be removed.
+
+                :param index_0: The index where the am/pm/m string is located.
+
+                :return: The string with the am/pm/m string removed.
+            """
+
+            # -------------- String at the Beginning ------------------------- #
+
+            # Trivial cases.
+            if index_0 == 0 and token_0[index_0] == 'm':
+                return token_0[1:]
+
+            elif index_0 == 0:
+                return token_0[2:]
+
+            # ------------------- String at any Other Point ------------------ #
+
+            # Trivial cases.
+            if token_0[index_0] == 'm':
+                return token_0[:index_0] + token_0[index_0 + 1:]
+
+            return token_0[:index_0] + token_0[index_0 + 2:]
+
+        def remove_ampm_dformat_0(token_0: str) -> str:
+            """
+                Removes the am/pm/m string.
+
+                :param token_0: The string from which the date will be removed.
+
+                :param index_0: The index where the am/pm/m string is located.
+
+                :return: The string with the am/pm/m string removed.
             """
 
             # Auxiliary variables.
-            counter0 = 0
-            token_sep0 = get_separators_format0()
-            tokens0 = []
+            string_0 = ""
 
-            # If there are no separation tokens.
-            if len(token_sep0) == 0:
-                return tuple()
+            # For all characters.
+            for character_0 in token_0:
 
-            # Get each separator.
-            for character0 in self.date:
-                # Get the tokens.
-                if character0 == token_sep0[counter0]:
-                    counter0 += 1
-                    tokens0.append(character0)
+                # Skip the am/pm indicator.
+                if character_0 == "i":
+                    continue
 
-                # No need to look for more tokens.
-                if counter0 >= len(token_sep0):
-                    break
+                # Appends the valid characters.
+                string_0 += character_0
 
-            return tuple(tokens0)
+            return string_0
 
-        def get_separators_format0() -> tuple:
+        def validate_ampm_0(index_0: int, string_0: str) -> bool:
             """
-                Returns the tuple with the field separators for the date format
-                string.
+                Validates that the am/pm/m string is in the given string.
 
-                :return: The tuple with the field separators for the date format
-                string.
+                :param index_0: The index where the am/pm/m string should be
+                 located.
+
+                :param string_0: The string where the am/pm/m string should be
+                 found.
+
+                :return: True, if the m, am or pn string is found. False,
+                 otherwise.
             """
 
-            # Auxiliary variables.
-            token_sep0 = []
+            # Check the string is long enough.
+            if not 0 <= index_0 < len(string_0):
+                return False
 
-            # Get the tokens of the format string.
-            for i0, character0 in enumerate(self.dformat):
-                # Non protected characters split the string.
-                if character0 not in DateValidator._PROTECTED:
-                    # 'i' characters are protected in the 12-hr date.
-                    if not (self.ampm and self.dformat[i0] == "i"):
-                        token_sep0.append(character0)
+            # Check the location of the string.
+            valid_0 = string_0[index_0] == "m"
+            valid_0 = valid_0 or string_0[index_0: index_0 + 2] == "am"
+            valid_0 = valid_0 or string_0[index_0: index_0 + 2] == "pm"
 
-            return tuple(token_sep0)
+            return valid_0
 
         # //////////////////////////////////////////////////////////////////////
         # Implementation
@@ -218,16 +268,58 @@ class DateValidator:
 
         # TODO: Add a function that checks that given date is not blank.
 
+        # Auxiliary variables.
+        is_noon = False
+
         # Get the tokens of the data.
-        dformat = get_separators_format0()
-        date = get_separators_date0()
+        dformat = self._get_separators_dformat()
+        date = self._get_separators_date(dformat)
 
         # If the separator list is not identical.
         if not dformat == date:
             return False
 
-        print(dformat)
-        print(date)
+        # Get the different parts of the string.
+        dformat = self._split_string(self.dformat, dformat)
+        date = self._split_string(self.date, date)
+
+        # Length of tokenizing must be the same.
+        if not len(dformat) == len(date):
+            return False
+
+        print("Hree")
+        #
+        # # Look for the string that contains the am/pm string, if needed.
+        # index = find_ampm_index_0(dformat) if self.ampm else -1
+        #
+        # # Look for the ampm string, validate it and remove it.
+        # if index >= 0:
+        #     # Get the index of appearance of the am/pm sign.
+        #     index0 = dformat[index].index('i')
+        #
+        #     # If the string is not valid.
+        #     if not validate_ampm_0(index0, date[index]):
+        #         return False
+        #
+        #     # Flag to validate that the time is noon.
+        #     is_noon = date[index][index0] == 'm'
+        #
+        #     # Remove the am/pm/m string.
+        #     date = list(date)
+        #     date[index] = remove_ampm_date_0(date[index], index0)
+        #     date = tuple(date)
+        #
+        #     # Remove the am/pm/m indicator.
+        #     dformat = list(dformat)
+        #     dformat[index] = remove_ampm_dformat_0(dformat[index])
+        #     dformat = tuple(dformat)
+        #
+        # # Check that the fields match in length.
+        # if not all(map(lambda x, y: len(x) == len(y), date, dformat)):
+        #     return False
+        #
+        # # Extract the different fields.
+        # extract_fields = extract_fields_0(date, dformat)
 
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     # Private Interface
@@ -239,6 +331,9 @@ class DateValidator:
 
     # Protected characters.
     _PROTECTED = 'Y', 'M', 'D', 'h', 'm', 's', 't'
+
+    # Valid date field formats.
+    _FORMATS = 'YYYY', 'YY', 'MM', 'MMM', 'DDD', 'DD', 'hh', 'mm', 'ss', 't'
 
     # ##########################################################################
     # Methods
@@ -307,6 +402,107 @@ class DateValidator:
 
         return subparts
 
+    def _get_separators_date(self, separators: tuple) -> tuple:
+        """
+            Gets the separators for the date at the same separators as that of
+            the format.
+
+            :return: The separators that match both the date and the date
+             format.
+        """
+
+        # If there are no separators.
+        if len(separators) == 0:
+            return tuple()
+
+        # Auxiliary variables.
+        dseparators = []
+        counter = 0
+
+        # Look for each separator.
+        for character in self.date:
+            # Check the character exists and append it.
+            if counter < len(separators) and separators[counter] == character:
+                dseparators.append(character)
+                counter += 1
+
+        return tuple(dseparators)
+
+    def _get_separators_dformat(self) -> tuple:
+        """
+            Gets the separators for the date format.
+
+            :return: From the date format string, gets the non-protected
+             characters.
+        """
+
+        # Auxiliary variables.
+        separators = []
+
+        # Check the characters.
+        for character in self.dformat:
+            # Check separating characters.
+            if character not in DateValidator._PROTECTED:
+                # Ignore the i character if it's in 12-hr format.
+                if character == 'i' and self.ampm:
+                    continue
+
+                # Append the character.
+                separators.append(character)
+
+        return tuple(separators)
+
+    # --------------------------------------------------------------------------
+    # Split Methods
+    # --------------------------------------------------------------------------
+
+    @staticmethod
+    def _split_string(string: str, separators: tuple):
+        """
+            Splits the string using the given characters are the splitting
+            tokens. Empty strings will be ignored.
+
+            :param string: The string to be split.
+
+            :param separators: The characters at which the string must be split.
+
+            :return: The split string using the separator characters as the
+             characters where the string will be split. Only non-empty strings
+             will be considered.
+        """
+
+        # No need to continue.
+        if len(separators) == 0:
+            return string,
+
+        # Auxiliary variables.
+        counter = 0
+        length = len(string) - 1
+        temporary = ""
+        tokens = []
+
+        # Look for the characters.
+        for i, character in enumerate(string):
+            # Add the string and update the counter.
+            if counter < len(separators) and character == separators[counter]:
+                # Add the token if needed.
+                if not temporary == "":
+                    tokens.append(copy.deepcopy(temporary))
+
+                # Update the strings and continue.
+                counter += 1
+                temporary = ""
+                continue
+
+            # Append the character.
+            temporary += character
+
+            # Add the last string.
+            if i == length and not temporary == "":
+                tokens.append(temporary)
+
+        return tokens
+
     # --------------------------------------------------------------------------
     # Validate Methods
     # --------------------------------------------------------------------------
@@ -354,25 +550,34 @@ class DateValidator:
 
         # Each field.
         for i, field0 in enumerate(fields):
+            # Validate that the field is in the protected characters.
+            valid = field0[0] in DateValidator._PROTECTED
+            valid = valid or field0[0] == 'i' and self.ampm
+            if not valid:
+                return False
+
             # Must not be the same as the other fields.
             for field1 in fields[i + 1:]:
-                if field0[0] == field1[0]:
+                if not valid or field0[0] == field1[0]:
                     return False
 
         # Check that the hour is given if the 12-hr format is given.
         if self.ampm:
             return any(char[0] == 'h' for char in fields)
 
-        # TODO: Add a function that checks that given format is not blank.
+        # Make sure that the fields are populated and in an available format.
+        valid = len(fields) > 0 and all(
+            map(lambda x: x in DateValidator._FORMATS, fields)
+        )
 
-        return True
+        return valid
 
 
 if __name__ == "__main__":
 
-    dvalue = "4234i;777;77;77;77;77-7;"
-    dforma = "YYYYii;MMM;DD;hh;mm;ss-t"
+    dvalue = "4244,MM;77;77am-22,22-9"
+    dforma = "YYYY,MM;DD;hhii-mm,ss-t"
     ampmp = True
 
-    val = DateValidator(dforma, date=dvalue, ampm=True)
+    val = DateValidator(dforma, date=dvalue, ampm=ampmp)
     val.validate_date()
