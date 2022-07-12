@@ -10,7 +10,7 @@
 from typing import Any
 
 # User defined.
-from date_validator.errors.errors_format import YearFormatError
+from date_validator.errors.errors_format import FieldFormatError
 
 # ##############################################################################
 # Classes
@@ -119,11 +119,21 @@ class FormatValidator:
         self.ampm = ampm
         self.dformat = dformat
 
-        raise YearFormatError("YY", formats=self.formats[:2])
+        # TODO: Remember that FieldFormatError is now available.
 
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     # Private Interface.
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
 
+# ##############################################################################
+# TO DELETE AFTER VISUAL TESTS.
+# ##############################################################################
 
+if __name__ == "__main__":
+
+    # TODO: THIS CAN BE MOVED TO THE TEST SECTION.
+    dform = "asdasd"
+    ampms = True
+
+    FormatValidator(dformat=dform, ampm=ampms)

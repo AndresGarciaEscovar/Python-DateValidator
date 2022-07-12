@@ -4,12 +4,15 @@
 # Imports
 # ##############################################################################
 
+# User defined.
+import date_validator.utilities.utilities_strings as us
+
 # ##############################################################################
 # Classes
 # ##############################################################################
 
 
-class YearFormatError(Exception):
+class FieldFormatError(Exception):
     """
         Class that contains the constructor for the exception when the date year
         format is wrong.
@@ -34,17 +37,19 @@ class YearFormatError(Exception):
         """
             Returns the base message.
 
-            :return: The base message for when the year format is not valid.
+            :return: The base message for when the field format is not valid.
         """
-        return "The year format is not valid."
+        return f"The {self.field} format is not valid."
 
     # ##########################################################################
     # Constructor
     # ##########################################################################
 
-    def __init__(self, year: str, formats: tuple):
+    def __init__(self, field: str, year: str, formats: tuple):
         """
             The method that builds the exception.
+
+            :param field: The name of the field with the error.
 
             :param year: The requested year format string.
 
@@ -52,10 +57,13 @@ class YearFormatError(Exception):
              year.
         """
 
-        # Customize the message.
-        message = self._customize(year, formats)
+        # Store the field name here.
+        self.field = field
 
-        super(YearFormatError, self).__init__(message)
+        # Customize the message.
+        message = "\n" + us.to_length(self._customize(year, formats))
+
+        super(FieldFormatError, self).__init__(message)
 
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     # Private Interface
@@ -73,15 +81,21 @@ class YearFormatError(Exception):
         """
             The method that further customizes the message.
 
-            :param year: The requested year format string.
+            :param field: The name of the field that contains the error.
+
+            :param year: The requested field format string.
 
             :param formats: The tuple that contains the valid formats for the
-             year.
+             field.
         """
 
+        fmts = list(map(lambda x: f"'{x}'", formats))
+        fmts = ", ".join(fmts[:-1]) + " and " + fmts[-1]
+
         message = (
-            f"The requested year format, '{year}', is not valid. The only "
-            f"available formats are {formats}."
+            f" The requested {self.field} format, '{year}', is not valid. The only "
+            f"available {'formats' if len(fmts) > 1 else 'format'} for the "
+            f"{self.field} {'are' if len(fmts) > 1 else 'is'} {fmts}."
         )
 
         return self.base_message + message
