@@ -127,7 +127,8 @@ class DateValidator:
             :param dformat: The format in which the date to validate should be
              given.
 
-            :param date: The date string to be validate agains the date format.
+            :param date: The date string to be validated against the date
+             format.
 
             :param ampm: The boolean flag that indicates if the date is given in
              12-hr format. True, if the date is given in 12-hr format. False,
@@ -140,9 +141,7 @@ class DateValidator:
         self.date = date
 
         # Initialize the validation dictionary.
-        self.quantites = dict((var, None) for var in DateValidator._FORMATS)
-        print(self.quantites)
-
+        self.quantites = dict((var, "") for var in DateValidator._FORMATS)
 
     # ##########################################################################
     # Methods
@@ -156,124 +155,25 @@ class DateValidator:
         """
             Validates that the stored date is given in the requested format. If
             the date is in 12-hr format, it checks that the time, if it's noon,
-            has a 'pm' or 'm' symbol.
+            has a 'pm' or 'm' string.
 
             :return: True, if the date is valid and in the given format. False,
              otherwise.
         """
 
         # //////////////////////////////////////////////////////////////////////
-        # Auxiliary Functions
-        # //////////////////////////////////////////////////////////////////////
-
-        def find_ampm_index_0(tokens_0: tuple) -> int:
-            """
-                Finds the location of the token that contains the am/pm string
-                in the tuples.
-
-                :param tokens_0: The tuple with the date format tokens.
-
-                :return: The index of the tuple that contains the am/pm string.
-            """
-
-            # A string must, at least contain the ii token.
-            for i_0, strings_0 in enumerate(tokens_0):
-                if 'ii' in strings_0:
-                    return i_0
-
-            return -1
-
-        def remove_ampm_date_0(token_0: str, index_0: int) -> str:
-            """
-                Removes the am/pm/m string.
-
-                :param token_0: The string from which the date will be removed.
-
-                :param index_0: The index where the am/pm/m string is located.
-
-                :return: The string with the am/pm/m string removed.
-            """
-
-            # -------------- String at the Beginning ------------------------- #
-
-            # Trivial cases.
-            if index_0 == 0 and token_0[index_0] == 'm':
-                return token_0[1:]
-
-            elif index_0 == 0:
-                return token_0[2:]
-
-            # ------------------- String at any Other Point ------------------ #
-
-            # Trivial cases.
-            if token_0[index_0] == 'm':
-                return token_0[:index_0] + token_0[index_0 + 1:]
-
-            return token_0[:index_0] + token_0[index_0 + 2:]
-
-        def remove_ampm_dformat_0(token_0: str) -> str:
-            """
-                Removes the am/pm/m string.
-
-                :param token_0: The string from which the date will be removed.
-
-                :param index_0: The index where the am/pm/m string is located.
-
-                :return: The string with the am/pm/m string removed.
-            """
-
-            # Auxiliary variables.
-            string_0 = ""
-
-            # For all characters.
-            for character_0 in token_0:
-
-                # Skip the am/pm indicator.
-                if character_0 == "i":
-                    continue
-
-                # Appends the valid characters.
-                string_0 += character_0
-
-            return string_0
-
-        def validate_ampm_0(index_0: int, string_0: str) -> bool:
-            """
-                Validates that the am/pm/m string is in the given string.
-
-                :param index_0: The index where the am/pm/m string should be
-                 located.
-
-                :param string_0: The string where the am/pm/m string should be
-                 found.
-
-                :return: True, if the m, am or pn string is found. False,
-                 otherwise.
-            """
-
-            # Check the string is long enough.
-            if not 0 <= index_0 < len(string_0):
-                return False
-
-            # Check the location of the string.
-            valid_0 = string_0[index_0] == "m"
-            valid_0 = valid_0 or string_0[index_0: index_0 + 2] == "am"
-            valid_0 = valid_0 or string_0[index_0: index_0 + 2] == "pm"
-
-            return valid_0
-
-        # //////////////////////////////////////////////////////////////////////
         # Implementation
         # //////////////////////////////////////////////////////////////////////
 
-        # TODO: Add a function that checks that given date is not blank.
-
-        # Auxiliary variables.
-        is_noon = False
+        # Reset the dictionary to blank all the fields.
+        self._reset_dictionary()
 
         # Get the tokens of the data.
         dformat = self._get_separators_dformat()
         date = self._get_separators_date(dformat)
+
+        print(dformat)
+        print(date)
 
         # If the separator list is not identical.
         if not dformat == date:
@@ -330,10 +230,12 @@ class DateValidator:
     # ##########################################################################
 
     # Protected characters.
-    _PROTECTED = 'Y', 'M', 'D', 'h', 'm', 's', 't'
+    _PROTECTED = 'Y', 'M', 'D', 'h', 'm', 's', 't', 'i'
 
     # Valid date field formats.
-    _FORMATS = 'YYYY', 'YY', 'MM', 'MMM', 'DDD', 'DD', 'hh', 'mm', 'ss', 't'
+    _FORMATS = (
+        'YYYY', 'YY', 'MM', 'MMM', 'DDD', 'DD', 'hh', 'mm', 'ss', 't', 'ii'
+    )
 
     # ##########################################################################
     # Methods
@@ -353,12 +255,15 @@ class DateValidator:
         # Auxiliary variables.
         length = len(self.dformat) - 1
         parts = []
+        protected = self._get_protected()
         string = ""
 
         # Remove all the separating characters.
         for i, character in enumerate(self.dformat):
-            # When the character hits a non-reserved character.
-            if character not in DateValidator._PROTECTED:
+
+            # When the character hits a non-protected character.
+            if character not in protected:
+
                 # Add only non-empty blocks.
                 if not string == "":
                     parts.append(string)
@@ -401,6 +306,16 @@ class DateValidator:
                     subparts.append(string)
 
         return subparts
+
+    def _get_protected(self):
+        """
+            Gets the tuple with the protected fields/characters.
+
+            :return: The tuple with the protected fields/characters.
+        """
+        # Format the protected symbols.
+        protected = DateValidator._PROTECTED
+        return protected if self.ampm else protected[:-1]
 
     def _get_separators_date(self, separators: tuple) -> tuple:
         """
@@ -451,6 +366,19 @@ class DateValidator:
                 separators.append(character)
 
         return tuple(separators)
+
+    # --------------------------------------------------------------------------
+    # Reset Methods
+    # --------------------------------------------------------------------------
+
+    def _reset_dictionary(self) -> None:
+        """
+            Resets the dictionary of the variables to check.
+        """
+
+        # Set all the entries to an empty string.
+        for key in self.quantites.keys():
+            self.quantites[key] = ""
 
     # --------------------------------------------------------------------------
     # Split Methods
@@ -509,14 +437,14 @@ class DateValidator:
 
     def _validate_format(self) -> None:
         """
-            Validates that the date format is valid.
+            Checks that the date format is valid.
 
             :raise: DateFormatError: If the date format is not valid.
         """
 
         # TODO: Add a function that checks that given date format is not blank.
 
-        # Check the am/pm field.
+        # Check for the am/pm flag.
         if self.ampm:
             # Must contain a single occurrence of i or ii.
             indexes = list(x.span() for x in re.finditer("ii|i", self.dformat))
@@ -531,8 +459,8 @@ class DateValidator:
                 raise DateFormatError(dformat=self.dformat, ampm=self.ampm)
 
         # Check the uniqueness of fields.
-        raw_format = self._get_format_fields()
-        valid = self._validate_format_fields(raw_format)
+        format_fields = self._get_format_fields()
+        valid = self._validate_format_fields(format_fields)
 
         # If there are repeated fields.
         if not valid:
@@ -548,11 +476,17 @@ class DateValidator:
             :return: True, if the fields are NOT repeated. False, otherwise.
         """
 
+        # Make sure that the fields are populated and in an available format.
+        valid = len(fields) > 0 and all(
+            map(lambda x: x in DateValidator._FORMATS, fields)
+        )
+        if not valid:
+            return False
+
         # Each field.
         for i, field0 in enumerate(fields):
             # Validate that the field is in the protected characters.
-            valid = field0[0] in DateValidator._PROTECTED
-            valid = valid or field0[0] == 'i' and self.ampm
+            valid = field0[0] in self._get_protected()
             if not valid:
                 return False
 
@@ -561,16 +495,11 @@ class DateValidator:
                 if not valid or field0[0] == field1[0]:
                     return False
 
-        # Check that the hour is given if the 12-hr format is given.
+        # Check that the hour is given, if in 12-hr format.
         if self.ampm:
             return any(char[0] == 'h' for char in fields)
 
-        # Make sure that the fields are populated and in an available format.
-        valid = len(fields) > 0 and all(
-            map(lambda x: x in DateValidator._FORMATS, fields)
-        )
-
-        return valid
+        return True
 
 
 if __name__ == "__main__":
