@@ -10,8 +10,7 @@
 from typing import Any
 
 # User defined.
-from date_validator.errors.errors_format import FieldFormatError
-
+import date_validator.errors.errors_format as ef
 # ##############################################################################
 # Classes
 # ##############################################################################
@@ -71,6 +70,7 @@ class FormatValidator:
             :param dformat: The string that represents the date format.
         """
         self.__dformat = str(dformat).strip()
+        self._validate_fields()
 
     # ------------------------------------------------------------------------ #
 
@@ -119,12 +119,91 @@ class FormatValidator:
         self.ampm = ampm
         self.dformat = dformat
 
-        # TODO: Remember that FieldFormatError is now available.
+    # ##########################################################################
+    # Methods
+    # ##########################################################################
+
+    # --------------------------------------------------------------------------
+    # Get Methods
+    # --------------------------------------------------------------------------
+
+    def get_fields(self) -> tuple:
+        """
+            Gets the fields that are in the date format.
+
+            :return: The fields that are in the date format.
+        """
+
+        # Auxiliary variables.
+        dformat = self.dformat
+        fields = []
+        length = len(dformat) - 1
+        string = ""
+
+        # Extract each field.
+        for i, char in enumerate(dformat):
+
+            # If the character is not protected.
+            if char not in self.protected:
+                fields.append(string) if string != "" else None
+                string = ""
+                continue
+
+            # Get the field.
+            if i > 0 and char != dformat[i - 1]:
+                fields.append(string) if string != "" else None
+                string = ""
+
+            # Append the character.
+            string += char
+
+            # Append the last string.
+            if i == length and string != "":
+                fields.append(string) if string != "" else None
+
+        return tuple(fields)
 
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     # Private Interface.
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+    # ##########################################################################
+    # Methods
+    # ##########################################################################
+
+    # --------------------------------------------------------------------------
+    # Validate Methods
+    # --------------------------------------------------------------------------
+
+    def _validate_fields(self) -> None:
+        """
+            Validates that the fields are unique.
+
+            :raise UniqueFieldsError: If there is a repeated field.
+        """
+
+        # //////////////////////////////////////////////////////////////////////
+        # Auxiliary Functions
+        # //////////////////////////////////////////////////////////////////////
+
+        def unique_fields_0() -> None:
+            """
+                Validates that the requested fields are unique and valid.
+
+                :raise UniqueFieldsError: If there is a repeated field.
+            """
+
+            if len(fields) == 0:
+                raise EmptyFormatError()
+
+        # //////////////////////////////////////////////////////////////////////
+        # Implementation
+        # //////////////////////////////////////////////////////////////////////
+
+        # Auxiliary variables.
+        fields = self.get_fields()
+
+        print(fields)
 
 # ##############################################################################
 # TO DELETE AFTER VISUAL TESTS.
@@ -133,7 +212,7 @@ class FormatValidator:
 if __name__ == "__main__":
 
     # TODO: THIS CAN BE MOVED TO THE TEST SECTION.
-    dform = "asdasd"
+    dform = "YYYYMM;DDhh;mmii;ss;t"
     ampms = True
 
     FormatValidator(dformat=dform, ampm=ampms)
