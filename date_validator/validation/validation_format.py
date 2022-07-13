@@ -11,6 +11,7 @@ from typing import Any
 
 # User defined.
 import date_validator.errors.errors_format as ef
+
 # ##############################################################################
 # Classes
 # ##############################################################################
@@ -186,6 +187,133 @@ class FormatValidator:
         # Auxiliary Functions
         # //////////////////////////////////////////////////////////////////////
 
+        def check_day_0() -> None:
+            """
+                Checks that, if the day is given in DD format, a month is
+                present. If the day is given in DDD format, the month must NOT
+                be present.
+
+                :raise DayFormatError: If the given fields are not enough to
+                 determine if the given day is valid.
+            """
+
+            # If the day is not given, no need to validate.
+            if "DDD" not in fields and "DD" not in fields:
+                return
+
+            # Check that a month is given.
+            if "DD" in fields:
+                if not ("MMM" in fields or 'MM' in fields):
+                    raise ef.DayFormatError()
+
+        def check_hour_0() -> None:
+            """
+                Checks that, if the hour is given, no year, month or day is
+                present or, at least, the day is present.
+
+                :raise HourFormatError: If the given fields are not enough to
+                 determine if the given hour is valid.
+            """
+
+            # If no hour is given, no need to validate.
+            if 'hh' not in fields:
+                return
+
+            # If the year, month and day are not given, no need to validate.
+            skip_0 = "YYYY" not in fields and "YY" not in fields
+            skip_0 = skip_0 and "MMM" not in fields and "MM" not in fields
+            skip_0 = skip_0 and "DDD" not in fields and "DD" not in fields
+
+            # No need to validate.
+            if skip_0:
+                return
+
+            # Must contain a day for the time to make sense.
+            if "DDD" not in fields and "DD" not in fields:
+                raise ef.HourFormatError()
+
+        def check_minutes_0() -> None:
+            """
+                Checks that, if the minutes are given, no year, month, day or
+                hour are present or, at least, an hour is present.
+
+                :raise MinutesFormatError: If the given fields are not enough to
+                 determine if the given minutes are valid.
+            """
+
+            # If no minutes are given, no need to validate.
+            if 'mm' not in fields:
+                return
+
+            # If the year, month and day are not given, no need to validate.
+            skip_0 = "YYYY" not in fields and "YY" not in fields
+            skip_0 = skip_0 and "MMM" not in fields and "MM" not in fields
+            skip_0 = skip_0 and "DDD" not in fields and "DD" not in fields
+            skip_0 = skip_0 and "hh" not in fields
+
+            # No need to validate.
+            if skip_0:
+                return
+
+            # Must contain an hour for the time to make sense.
+            if "hh" not in fields:
+                raise ef.MinutesFormatError()
+
+        def check_seconds_0() -> None:
+            """
+                Checks that, if the seconds are given, no year, month or day is
+                present or, at least, the day is present.
+
+                :raise SecondsFormatError: If the given fields are not enough to
+                 determine if the given seconds are valid.
+            """
+
+            # If no minutes are given, no need to validate.
+            if 'ss' not in fields:
+                return
+
+            # If the year, month and day are not given, no need to validate.
+            skip_0 = "YYYY" not in fields and "YY" not in fields
+            skip_0 = skip_0 and "MMM" not in fields and "MM" not in fields
+            skip_0 = skip_0 and "DDD" not in fields and "DD" not in fields
+            skip_0 = skip_0 and "hh" not in fields and "mm" not in fields
+
+            # No need to validate.
+            if skip_0:
+                return
+
+            # Must contain an hour for the time to make sense.
+            if "mm" not in fields:
+                raise ef.SecondsFormatError()
+
+        def existing_fields_0() -> None:
+            """
+                Validates that the requested fields exist.
+
+                :raise FieldFortmatError: If there is a field that that doesn't
+                 exist.
+            """
+
+            field_names_0 = {
+                'Y': 'years', 'M': 'months', 'D': 'days', 'h': 'hours',
+                'm': 'minutes', 's': 'seconds', 't': 'tenths of seconds'
+            }
+
+            not_valid_0 = []
+
+            # For each field.
+            for field_0 in fields:
+                # If the fields don't match.
+                if field_0 not in self.formats:
+                    # Get the field name.
+                    field_name_0 = field_names_0[field_0[0]]
+                    for key_0 in self.formats:
+                        not_valid_0.append(key_0) if field_0[0] in key_0 else 0
+
+                    raise ef.FieldFormatError(
+                        field_name_0, field_0, tuple(not_valid_0)
+                    )
+
         def unique_fields_0() -> None:
             """
                 Validates that the requested fields are unique and valid.
@@ -193,8 +321,17 @@ class FormatValidator:
                 :raise UniqueFieldsError: If there is a repeated field.
             """
 
+            # If the field is empty.
             if len(fields) == 0:
-                raise EmptyFormatError()
+                raise ef.EmptyFormatError(self.dformat, self.get_fields())
+
+            # For each field.
+            for i_0, field_0_0 in enumerate(fields):
+                # Compare against other fields.
+                for j_0, field_0_1 in enumerate(fields[i_0 + 1:]):
+                    # Repeated fields shouldn't exist.
+                    if field_0_0[0] == field_0_1[0]:
+                        raise ef.RepeatedFieldsError(fields)
 
         # //////////////////////////////////////////////////////////////////////
         # Implementation
@@ -203,16 +340,36 @@ class FormatValidator:
         # Auxiliary variables.
         fields = self.get_fields()
 
-        print(fields)
+        # Validate the fields are unique.
+        unique_fields_0()
+
+        # Validate the fields exist.
+        existing_fields_0()
+
+        # Check the day.
+        check_day_0()
+
+        # Check the hour.
+        check_hour_0()
+
+        # Check the minutes.
+        check_minutes_0()
+
+        # Check the seconds.
+        check_seconds_0()
+        # Check the tenths of second.
+        check_tenths_0()
+
 
 # ##############################################################################
 # TO DELETE AFTER VISUAL TESTS.
 # ##############################################################################
 
+
 if __name__ == "__main__":
 
     # TODO: THIS CAN BE MOVED TO THE TEST SECTION.
-    dform = "YYYYMM;DDhh;mmii;ss;t"
+    dform = "MM:DD;hh;mmii;ss;t"
     ampms = True
 
     FormatValidator(dformat=dform, ampm=ampms)
