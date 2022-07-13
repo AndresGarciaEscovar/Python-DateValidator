@@ -357,7 +357,8 @@ class FormatValidator:
 
         # Check the seconds.
         check_seconds_0()
-        # Check the tenths of second.
+
+        # TODO: Check the tenths of second.
         check_tenths_0()
 
 
