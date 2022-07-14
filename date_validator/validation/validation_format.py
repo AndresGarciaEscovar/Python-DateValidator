@@ -437,7 +437,6 @@ class FormatValidator:
 
 if __name__ == "__main__":
 
-    # TODO: THIS CAN BE MOVED TO THE TEST SECTION.
     dform = "YYYY;DDD-*ii;hh;mm;ss;t"
     ampms = True
 
