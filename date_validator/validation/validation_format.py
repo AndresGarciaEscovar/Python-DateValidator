@@ -164,6 +164,28 @@ class FormatValidator:
 
         return tuple(fields)
 
+    def get_separators(self) -> tuple:
+        """
+            Gets the non-protected characters in the order that they appear.
+
+            :return: The non-protected characters from the date format.
+        """
+
+        # Auxiliary variables.
+        dformat = self.dformat
+        characters = []
+
+        # Extract each field.
+        for i, char in enumerate(dformat):
+
+            # If the character is not protected.
+            if char not in self.protected:
+                characters.append(char)
+
+        print(characters)
+
+        return tuple(characters)
+
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     # Private Interface.
     # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
@@ -186,6 +208,20 @@ class FormatValidator:
         # //////////////////////////////////////////////////////////////////////
         # Auxiliary Functions
         # //////////////////////////////////////////////////////////////////////
+
+        def check_ampm_0() -> None:
+            """
+                Checks that, if the 12-hr format is requested, an hour is
+                provided. If the am/pm indicator is given, the hour MUST be
+                present.
+
+                :raise AmPmFormatError: If the given fields are not enough to
+                 determine if the given day is valid.
+            """
+
+            # Check that the am/pm flag is present, also an hour is given.
+            if "ii" not in fields or "hh" not in fields:
+                raise ef.AmPmFormatError()
 
         def check_day_0() -> None:
             """
@@ -261,8 +297,8 @@ class FormatValidator:
 
         def check_seconds_0() -> None:
             """
-                Checks that, if the seconds are given, no year, month or day is
-                present or, at least, the day is present.
+                Checks that, if the seconds are given, no year, month, day, hour
+                and/or minutes are given or, at least, the minutes are present.
 
                 :raise SecondsFormatError: If the given fields are not enough to
                  determine if the given seconds are valid.
@@ -285,6 +321,35 @@ class FormatValidator:
             # Must contain an hour for the time to make sense.
             if "mm" not in fields:
                 raise ef.SecondsFormatError()
+
+        def check_tenths_0() -> None:
+            """
+                Checks that, if the seconds are given, no year, month, day,
+                hour, minutes, and/or seconds are given or, at least, the
+                seconds are present.
+
+                :raise TenthsFormatError: If the given fields are not enough to
+                 determine if the given tenths of second are valid.
+            """
+
+            # If no minutes are given, no need to validate.
+            if 't' not in fields:
+                return
+
+            # If the year, month and day are not given, no need to validate.
+            skip_0 = "YYYY" not in fields and "YY" not in fields
+            skip_0 = skip_0 and "MMM" not in fields and "MM" not in fields
+            skip_0 = skip_0 and "DDD" not in fields and "DD" not in fields
+            skip_0 = skip_0 and "hh" not in fields and "mm" not in fields
+            skip_0 = skip_0 and "ss" not in fields
+
+            # No need to validate.
+            if skip_0:
+                return
+
+            # Must contain an hour for the time to make sense.
+            if "ss" not in fields:
+                raise ef.TenthsFormatError()
 
         def existing_fields_0() -> None:
             """
@@ -346,6 +411,9 @@ class FormatValidator:
         # Validate the fields exist.
         existing_fields_0()
 
+        # Check the am/pm flag.
+        check_ampm_0() if self.ampm else None
+
         # Check the day.
         check_day_0()
 
@@ -358,7 +426,7 @@ class FormatValidator:
         # Check the seconds.
         check_seconds_0()
 
-        # TODO: Check the tenths of second.
+        # Check the tenths of seconds.
         check_tenths_0()
 
 
@@ -370,7 +438,9 @@ class FormatValidator:
 if __name__ == "__main__":
 
     # TODO: THIS CAN BE MOVED TO THE TEST SECTION.
-    dform = "MM:DD;hh;mmii;ss;t"
+    dform = "YYYY;DDD-*ii;hh;mm;ss;t"
     ampms = True
 
-    FormatValidator(dformat=dform, ampm=ampms)
+    val = FormatValidator(dformat=dform, ampm=ampms)
+    print(val.get_separators())
+    print(val.get_fields())

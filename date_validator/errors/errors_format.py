@@ -12,6 +12,51 @@ import date_validator.utilities.utilities_strings as us
 # ##############################################################################
 
 
+class AmPmFormatError(Exception):
+    """
+        Class that contains the constructor for the exception when the date
+        format contains the am/pm flag, but no hour is given.
+
+        Properties:
+        __________
+
+        - self.base_message: The standard message to be displayed. Will be
+          customized further if parameters are passed to the constructor.
+    """
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # Public Interface
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    # ##########################################################################
+    # Properties
+    # ##########################################################################
+
+    @property
+    def base_message(self) -> str:
+        """
+            Returns the base message.
+
+            :return: The base message for when the field format constains no
+             valid fields.
+        """
+        return (
+            f"When the am/pm flag is given, an hour and the 'ii' string must be "
+            f"provided for the time validation to be consistent."
+        )
+
+    # ##########################################################################
+    # Constructor
+    # ##########################################################################
+
+    def __init__(self):
+        """
+            The method that builds the exception.
+        """
+        message = "\n" + us.to_length(self.base_message)
+        super(AmPmFormatError, self).__init__(message)
+
+
 class DayFormatError(Exception):
     """
         Class that contains the constructor for the exception when the date
@@ -518,3 +563,51 @@ class SecondsFormatError(Exception):
         """
         message = "\n" + us.to_length(self.base_message)
         super(SecondsFormatError, self).__init__(message)
+
+
+class TenthsFormatError(Exception):
+    """
+        Class that contains the constructor for the exception when the date
+        format contains a minute field, a year, a month, a day, hours and/or
+        minutes, but not seconds in 'ss' format.
+
+        Properties:
+        __________
+
+        - self.base_message: The standard message to be displayed. Will be
+          customized further if parameters are passed to the constructor.
+    """
+
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # Public Interface
+    # $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+    # ##########################################################################
+    # Properties
+    # ##########################################################################
+
+    @property
+    def base_message(self) -> str:
+        """
+            Returns the base message.
+
+            :return: The base message for when the field format constains no
+             valid fields.
+        """
+        return (
+            f"Tenths of second were provided with a year, a month, a day, "
+            f"hours and/or minutes but no seconds were provided, in 'ss' "
+            f"format. In this case, if seconds are not provided, the tenths of "
+            f"seconds cannot be consistently validated."
+        )
+
+    # ##########################################################################
+    # Constructor
+    # ##########################################################################
+
+    def __init__(self):
+        """
+            The method that builds the exception.
+        """
+        message = "\n" + us.to_length(self.base_message)
+        super(TenthsFormatError, self).__init__(message)
