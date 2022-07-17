@@ -1,4 +1,6 @@
-""" File that contains the date validator custom execptions. """
+"""
+    File that contains the date validator custom execptions.
+"""
 
 # ##############################################################################
 # Imports
