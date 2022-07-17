@@ -111,9 +111,16 @@ class FormatValidator:
     # Constructor
     # ##########################################################################
 
-    def __init__(self, dformat, ampm):
+    def __init__(self, dformat: str, ampm: bool):
         """
             Initializes the variables of the date formatter.
+
+            :param dformat: The string that represents the format in which the
+             date should be given.
+
+            :param ampm: The boolean flag that indicates if the time is given
+             in 12-hr or 24-hr format. True, if the time is given in 12-hr
+             format; False, otherwise.
         """
 
         # Set the variables.
@@ -164,6 +171,37 @@ class FormatValidator:
 
         return tuple(fields)
 
+    def get_fields_using_separators(self) -> tuple:
+        """
+            Gets the fields that are delimited by the separators.
+
+            :return: The fields that are delimited by the separators.
+        """
+
+        # Auxiliary variables.
+        dformat = self.dformat
+        fields = []
+        length = len(dformat) - 1
+        string = ""
+
+        # Extract each field.
+        for i, char in enumerate(dformat):
+
+            # If the character is not protected.
+            if char not in self.protected:
+                fields.append(string) if string != "" else None
+                string = ""
+                continue
+
+            # Append the character.
+            string += char
+
+            # Append the last string.
+            if i == length and string != "":
+                fields.append(string) if string != "" else None
+
+        return tuple(fields)
+
     def get_separators(self) -> tuple:
         """
             Gets the non-protected characters in the order that they appear.
@@ -181,8 +219,6 @@ class FormatValidator:
             # If the character is not protected.
             if char not in self.protected:
                 characters.append(char)
-
-        print(characters)
 
         return tuple(characters)
 
@@ -428,18 +464,3 @@ class FormatValidator:
 
         # Check the tenths of seconds.
         check_tenths_0()
-
-
-# ##############################################################################
-# TO DELETE AFTER VISUAL TESTS.
-# ##############################################################################
-
-
-if __name__ == "__main__":
-
-    dform = "YYYY;DDD-*ii;hh;mm;ss;t"
-    ampms = True
-
-    val = FormatValidator(dformat=dform, ampm=ampms)
-    print(val.get_separators())
-    print(val.get_fields())
