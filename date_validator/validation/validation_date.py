@@ -11,7 +11,6 @@ from typing import Any
 
 # User defined.
 import date_validator.validation.validation_format as vf
-import date_validator.errors.errors_format as ef
 
 # ##############################################################################
 # Classes
@@ -249,6 +248,85 @@ class DateValidator:
                 f"but this is not happening.\nDate Format Fields: {fields_0}."
             )
 
+        def get_month_days_0() -> int:
+            """
+                Gets the number of days in the given month. If no month is
+                given, it can be safely assumed that the value to be returned is
+                31.
+
+                :return: The number of days in the given month.
+            """
+
+            # No month is given.
+            if dictionary["MMM"] == "" and dictionary["MM"] == "":
+                return 31
+
+            # Get the year.
+            year_0 = 0 if dictionary["YYYY"] == "" else int(dictionary["YYYY"])
+            year_0 = year_0 if dictionary["YY"] == "" else int(dictionary["YY"])
+
+            # Get the number month.
+            if dictionary["MMM"] != "":
+                month_0 = {
+                    "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5,
+                    "JUN": 6, "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10,
+                    "NOV": 11, "DEC": 12
+                }[dictionary["MMM"]]
+            else:
+                month_0 = int(dictionary["MM"])
+
+            # Get the number of days in a month.
+            return {
+                1: 31, 2: 29 if year_0 % 4 == 0 else 28, 3: 31, 4: 30, 5: 31,
+                6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+            }[month_0]
+
+        def get_month_days_range_0() -> tuple:
+            """
+                Gets the number of days that have gone by in the given year, up
+                to the given month and the month after.
+
+                :return: The number of days gone up to given month, plus one.
+            """
+
+            # Get the year.
+            year_0 = 0 if dictionary["YYYY"] == "" else int(dictionary["YYYY"])
+            year_0 = year_0 if dictionary["YY"] == "" else int(dictionary["YY"])
+
+            # No month is given.
+            if dictionary["MMM"] == "" and dictionary["MM"] == "":
+                return 1, 367 if year_0 % 4 == 0 else 366
+
+            # Define the number of days in a month.
+            days_in_month_0 = {
+                0: 1, 1: 30, 2: 29 if year_0 % 4 == 0 else 28, 3: 31, 4: 30,
+                5: 31, 6: 30, 7: 31, 8: 31, 9: 30, 10: 31, 11: 30, 12: 31
+            }
+
+            # Get the number month.
+            if dictionary["MMM"] != "":
+                month_0 = {
+                    "JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5,
+                    "JUN": 6, "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10,
+                    "NOV": 11, "DEC": 12
+                }[dictionary["MMM"]]
+            else:
+                month_0 = int(dictionary["MM"])
+
+            # Add the relevant months.
+            counter_0_0 = 1 if month_0 > 1 else 0
+            counter_0_1 = 1
+            for i_0, value_0 in enumerate(days_in_month_0.values(), start=1):
+                # Get the days gone.
+                counter_0_0 += days_in_month_0[i_0 - 1]
+                counter_0_1 += days_in_month_0[i_0]
+
+                # Counter reaches the end.
+                if i_0 == month_0:
+                    break
+
+            return counter_0_0, counter_0_1 + 1
+
         def get_valid_fields_0() -> bool:
             """
                 From the tokenized string by the separators, gets the different
@@ -327,16 +405,94 @@ class DateValidator:
         # ------------------------ Validate Functions ------------------------ #
 
         def validate_day_0() -> bool:
-            """"""
-            return True
+            """
+                Validates that the day is given as a day of the month or a day
+                of the year.
+
+                :return: True, if the day is valid. False, otherwise.
+            """
+
+            # No day to validate.
+            if dictionary["DD"] == "" and dictionary["DDD"] == "":
+                return True
+
+            # Validate the two-digit day.
+            if dictionary["DD"] != "":
+                try:
+                    days_0 = get_month_days_0() + 1
+                    return int(dictionary["DD"]) in range(1, days_0)
+                except (TypeError, ValueError):
+                    return False
+
+            # Get the number of days gone by in the year.
+            range_0 = get_month_days_range_0()
+
+            print(range_0)
+
+            # Try to validate the day.
+            try:
+                return int(dictionary["DDD"]) in range(*range_0)
+            except (TypeError, ValueError):
+                return False
 
         def validate_hour_0() -> bool:
-            """"""
-            return True
+            """
+                Validates that the hour is in the proper range, given the
+                format.
+
+                :return: True, if the given hour is valid. False, otherwise.
+            """
+
+            # No need to check.
+            if dictionary["hh"] == "":
+                return False
+
+            # Convert into numerical format.
+            try:
+                hour_0 = int(dictionary["hh"])
+            except (TypeError, ValueError):
+                return False
+
+            # Check the 12-hr format.
+            if self.ampm:
+                # Check existence of the am/pm/m strings.
+                if dictionary["ii"] not in ("am", "pm", "m"):
+                    return False
+
+                # Must be noon.
+                if dictionary["ii"] == "m":
+                    return hour_0 == 12
+
+                return 1 <= hour_0 <= 12
+
+            # Check that the 12-hr format string is empty.
+            if dictionary["ii"] != "":
+                raise ValueError(
+                    "\nTime is being validated in 24-hr format but the 'ii' "
+                    "field is present. This shouldn't happen."
+                    f"\n\tDate format fields: {self.dformat.get_fields()}"
+                    f"\n\tDate to validate: {self.date}"
+                )
+
+            return 1 <= hour_0 <= 24
 
         def validate_minutes_0() -> bool:
-            """"""
-            return True
+            """
+                Validates that the minutes are in the proper range, given the
+                format.
+
+                :return: True, if the given minutes are valid. False, otherwise.
+            """
+
+            # No need to validate.
+            if dictionary["mm"] == "":
+                return True
+
+            # Validate the minutes range.
+            try:
+                return 0 <= int(dictionary["mm"]) <= 59
+            except (TypeError, ValueError):
+                return False
 
         def validate_month_0() -> bool:
             """
@@ -364,12 +520,41 @@ class DateValidator:
                 return False
 
         def validate_seconds_0() -> bool:
-            """"""
-            return True
+            """
+                Validates that the seconds are in the proper range, given the
+                format.
+
+                :return: True, if the given seconds are valid. False, otherwise.
+            """
+
+            # No need to validate.
+            if dictionary["ss"] == "":
+                return True
+
+            # Validate the seconds range.
+            try:
+                return 0 <= int(dictionary["ss"]) <= 59
+            except (TypeError, ValueError):
+                return False
 
         def validate_tenths_0() -> bool:
-            """"""
-            return True
+            """
+                Validates that the tenths of seconds are in the proper range,
+                given the format.
+
+                :return: True, if the given tenths of seconds are valid. False,
+                 otherwise.
+            """
+
+            # No need to validate.
+            if dictionary["t"] == "":
+                return True
+
+            # Validate the seconds range.
+            try:
+                return 0 <= int(dictionary["t"]) <= 9
+            except (TypeError, ValueError):
+                return False
 
         def validate_year_0() -> bool:
             """
@@ -424,16 +609,13 @@ class DateValidator:
         # Validate the date.
         valid = validate_year_0()
         valid = valid and validate_month_0()
+        valid = valid and validate_day_0()
 
-        # TODO: Finish validating these entries.
-
-        # valid = valid and validate_day_0()
-        #
         # # Validate the time.
-        # valid = valid and validate_hour_0()
-        # valid = valid and validate_minutes_0()
-        # valid = valid and validate_seconds_0()
-        # valid = valid and validate_tenths_0()
+        valid = valid and validate_hour_0()
+        valid = valid and validate_minutes_0()
+        valid = valid and validate_seconds_0()
+        valid = valid and validate_tenths_0()
 
         return valid
 
@@ -444,10 +626,9 @@ class DateValidator:
 
 if __name__ == "__main__":
 
-    vdate = "2025-DEC-29;12:32pm:10:9"
+    vdate = "2000-FEB-29;12:32m:10:9"
     dform = "YYYY-MMM-DD;hh:mmii:ss:t"
     ampms = True
 
     val = DateValidator(date=vdate, dformat=dform, ampm=ampms)
     print(val())
-
