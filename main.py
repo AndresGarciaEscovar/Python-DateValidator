@@ -1,18 +1,45 @@
-# This is a sample Python script.
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+# ##############################################################################
+# Imports
+# ##############################################################################
+
+# General.
+import pathlib
+
+# ##############################################################################
+# Classes
+# ##############################################################################
+
+
+class TestMetaclass(type):
+    def __new__(cls, clsname, bases, clsdict):
+        print(clsdict)
+        print(bases)
+        print(clsname)
+        return super().__new__(cls, clsname, bases, clsdict)
+
+class TestClass(metaclass=TestMetaclass):
+    def __init__(self):
+        self.s = 0
+
+
+# ##############################################################################
+# Main Function
+# ##############################################################################
 
 
 def main() -> None:
+    """
+        Runs the main function.
+    """
+    test = TestClass()
 
-    my_string_0 = "hello Andres"
-    my_string_1 = " ".join("hello Andres".split(" "))
 
-    print(my_string_0)
-    print(my_string_1)
+# ##############################################################################
+# Main Program
+# ##############################################################################
 
-# Press the green button in the gutter to run the script.
+
 if __name__ == '__main__':
     main()
 
